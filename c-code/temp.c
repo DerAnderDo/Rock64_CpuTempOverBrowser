@@ -1,3 +1,17 @@
+/******************************************************************************
+  * @file           : temp.c
+  * @brief          : temperature data collection
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) None
+  * Use as you wish.
+  *
+  * To be tested: Make sure no double line break is added to newly created
+  * temperature csv files.
+  ******************************************************************************
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
