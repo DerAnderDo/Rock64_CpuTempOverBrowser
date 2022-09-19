@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Simple Rock64 CPU Temperature Chart</title>
+        <script src="chart.js"></script>
+    </head>
+    <body>
+      
+      <div class="chart-container" style="position: relative; height:40vh; width:95vw">
+        <canvas id="chart1"></canvas>
+        <canvas id="chart2"></canvas>
+        <canvas id="chart3"></canvas>
+        <script>
+            const chart1 = ['chart1', '/data/0_Temperatures.csv'];
+            const chart2 = ['chart2', '/data/2_Temperatures.csv'];
+            const chart3 = ['chart3', '/data/3_Temperatures.csv'];
+            var date = "";
+
+            chartIt(chart1[0], chart1[1]);
+            chartIt(chart2[0], chart2[1]);
+            chartIt(chart3[0], chart3[1]);
+            
+            async function chartIt(chart_id, table_no){
+              const data_axis = await getData(table_no);
+              const data = {
+                labels: data_axis.xs,
+                datasets: [{
+                  label: 'Temperature SMA10',
+                  backgroundColor: 'rgb(20, 196, 250)',
+                  borderColor: 'rgb(20, 196, 250)',
+                  data: data_axis.movingAverage,
+                },
+              {
+                  label: 'Rock64 CPU Temperature for ' + date,
+                  backgroundColor: 'rgb(255, 99, 132)',
+                  borderColor: 'rgb(255, 99, 132)',
+                  data: data_axis.ys,
+              }]
+              };
+          
+              const config = {
+                type: 'line',
+                data: data,
+                options: {
+                  scales: {
+                    y: {
+                      //min: 35,
+                      //max: 65,
+                    }
+                  }
+                }
+              };
+
+              const myChart = new Chart(
+                document.getElementById(chart_id),
+                config
+              );
+            }
+
+            getData(chart1[1]);
+            getData(chart2[1]);
+            getData(chart3[1]);
+
+            async function getData(table_no){
+                const xs = [];
+                const ys = [];
+                const response = await fetch(table_no);
+                console.log("Loading Table: " + table_no);
+                const data = await response.text();
+
+                const pretable = data.split('\n');
+                date = pretable[0];
+                const table = pretable.slice(1);
+                table.forEach(row => {
+                    const cols = row.split(',');
+                    const time = cols[0];
+                    xs.push(time);
+                    const temp = cols[1];
+                    ys.push(parseFloat(temp));
+                });
+                //Calculate SMA3 (simple moving average 10)
+                const average = 10;
+                const movingAverage = [];
+                for (i = 0; i < ys.length; i++){
+                  const data1 = ys.slice(i, average + i);
+
+                  const datapoints = data1.filter(function (value) { //remove NaN
+                    return !Number.isNaN(value);
+                  });
+
+                  movingAverage.push(datapoints.reduce((a, b) => a + b, 0) / datapoints.length);
+                }
+                return {xs, ys, movingAverage};
+            }
+        </script>
+      </div>
+    </body>
+</html>
