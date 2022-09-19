@@ -31,7 +31,7 @@
                   label: 'Temperature SMA10',
                   backgroundColor: 'rgb(20, 196, 250)',
                   borderColor: 'rgb(20, 196, 250)',
-                  data: data_axis.movingAverage,
+                  data: data_axis.filtered,
                 },
               {
                   label: 'Rock64 CPU Temperature for ' + date,
@@ -81,20 +81,25 @@
                     const temp = cols[1];
                     ys.push(parseFloat(temp));
                 });
-                //Calculate SMA3 (simple moving average 10)
-                const average = 10;
-                const movingAverage = [];
-                for (i = 0; i < ys.length; i++){
-                  const data1 = ys.slice(i, average + i);
 
-                  const datapoints = data1.filter(function (value) { //remove NaN
-                    return !Number.isNaN(value);
-                  });
+                //Lowpass Filter
+                var old_in = 0;
+                var old_out = 0;
+                var input = 0;
+                var output = 0;
+                output = old_out*0.969 + input*0.016 + old_in*0.016;
+                const filtered = [];
 
-                  movingAverage.push(datapoints.reduce((a, b) => a + b, 0) / datapoints.length);
+                for (i = 1; i < ys.length-2; i++){
+                  input = ys[i];
+                  old_in = ys[i-1];
+                  old_out = output;
+                  output = old_out*0.964 + input*0.018 + old_in*0.018;
+                  filtered.push(output);
+                  };
+                  console.log(filtered);
+                return {xs, ys, filtered};
                 }
-                return {xs, ys, movingAverage};
-            }
         </script>
       </div>
     </body>
