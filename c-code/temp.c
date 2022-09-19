@@ -84,7 +84,7 @@ int main(){
         fclose(config);
     }
 
-    read_temp(temperature);
+    T = read_temp(temperature);
     switch(lastday){
         case 1:
         csvfile = fopen("/var/www/data/0_Temperatures.csv", "a");
