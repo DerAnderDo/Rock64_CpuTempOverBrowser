@@ -28,7 +28,7 @@
               const data = {
                 labels: data_axis.xs,
                 datasets: [{
-                  label: 'Temperature SMA10',
+                  label: 'Lowpass filtered',
                   backgroundColor: 'rgb(20, 196, 250)',
                   borderColor: 'rgb(20, 196, 250)',
                   data: data_axis.filtered,
@@ -87,17 +87,21 @@
                 var old_out = 0;
                 var input = 0;
                 var output = 0;
-                output = old_out*0.969 + input*0.016 + old_in*0.016;
+                run_filter();
                 const filtered = [];
 
                 for (i = 1; i < ys.length-2; i++){
                   input = ys[i];
                   old_in = ys[i-1];
                   old_out = output;
-                  output = old_out*0.964 + input*0.018 + old_in*0.018;
+                  run_filter();
                   filtered.push(output);
                   };
-                  console.log(filtered);
+                  
+                function run_filter(){
+                  output = old_out*0.75 + input*0.125 + old_in*0.125;
+                }
+
                 return {xs, ys, filtered};
                 }
         </script>
