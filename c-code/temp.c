@@ -21,11 +21,13 @@ int read_config(FILE* fd){
 	return t;
 }
 
-void read_temp(FILE* fd, double T){
+double read_temp(FILE* fd){
     fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+    double T;
     fscanf(fd, "%lf", &T);
     T /= 1000;
     fclose(fd);
+    return(T);
 }
 
 void sleep_ms(int milliseconds){
