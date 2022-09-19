@@ -13,17 +13,19 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
-int read_config(FILE* filedescriptor){
-	char* t;
-	fseek(filedescriptor, 0, SEEK_SET);
-	fread(&t, 1, 1, filedescriptor);
-    //printf("config.txt: %c", t);
-    int var = atoi(&t);
-    //printf("config.txt: %d", var);
-	return var;
+int read_config(FILE* fd){
+	int t;
+    fscanf(fd, "%d", &t);
+	return t;
+}
+
+void read_temp(FILE* fd, double T){
+    fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+    fscanf(fd, "%lf", &T);
+    T /= 1000;
+    fclose(fd);
 }
 
 void sleep_ms(int milliseconds){
@@ -38,22 +40,11 @@ int main(){
     struct tm tm = *localtime(&T1);
 
     int nanosleep(const struct timespec * req, struct timespec * rem);
+
     FILE *temperature;
-    FILE *fpt;
+    FILE *csvfile;
     FILE *config;
     double T;
-
-    temperature = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-    if(temperature == NULL)
-        {
-        printf("Can't measure the cpu temperature");
-        }
-        else
-        {
-        fscanf(temperature, "%lf", &T);
-        T /= 1000;
-        fclose(temperature);
-    }
 
     config = fopen("/var/www/data/config.txt", "r+");
     int lastday = read_config(config);
@@ -63,8 +54,8 @@ int main(){
         switch(lastday){
             case 1:
             remove("/var/www/data/2_Temperatures.csv");
-            fpt = fopen("/var/www/data/2_Temperatures.csv", "w");
-            fprintf(fpt, "%02d/%02d/%04d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+            csvfile = fopen("/var/www/data/2_Temperatures.csv", "w");
+            fprintf(csvfile, "%02d/%02d/%04d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
             lastday = 2;
             fseek(config, 0, SEEK_SET);
             fprintf(config, "2");
@@ -72,8 +63,8 @@ int main(){
 
             case 2:
             remove("/var/www/data/3_Temperatures.csv");
-            fpt = fopen("/var/www/data/3_Temperatures.csv", "w");
-            fprintf(fpt, "%02d/%02d/%04d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+            csvfile = fopen("/var/www/data/3_Temperatures.csv", "w");
+            fprintf(csvfile, "%02d/%02d/%04d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
             lastday = 3;
             fseek(config, 0, SEEK_SET);
             fprintf(config, "3");
@@ -81,8 +72,8 @@ int main(){
 
             case 3:
             remove("/var/www/data/0_Temperatures.csv");
-            fpt = fopen("/var/www/data/0_Temperatures.csv", "w");
-            fprintf(fpt, "%02d/%02d/%04d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+            csvfile = fopen("/var/www/data/0_Temperatures.csv", "w");
+            fprintf(csvfile, "%02d/%02d/%04d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
             lastday = 1;
             fseek(config, 0, SEEK_SET);
             fprintf(config, "1");
@@ -93,21 +84,21 @@ int main(){
 
     switch(lastday){
         case 1:
-        fpt = fopen("/var/www/data/0_Temperatures.csv", "a");
-        fprintf(fpt, "%02d:%02d, %2.1f\n", tm.tm_hour, tm.tm_min, T);
-        fclose(fpt);
+        csvfile = fopen("/var/www/data/0_Temperatures.csv", "a");
+        fprintf(csvfile, "%02d:%02d, %2.1f\n", tm.tm_hour, tm.tm_min, T);
+        fclose(csvfile);
         break;
 
         case 2:
-        fpt = fopen("/var/www/data/2_Temperatures.csv", "a");
-        fprintf(fpt, "%02d:%02d, %2.1f\n", tm.tm_hour, tm.tm_min, T);
-        fclose(fpt);
+        csvfile = fopen("/var/www/data/2_Temperatures.csv", "a");
+        fprintf(csvfile, "%02d:%02d, %2.1f\n", tm.tm_hour, tm.tm_min, T);
+        fclose(csvfile);
         break;
 
         case 3:
-        fpt = fopen("/var/www/data/3_Temperatures.csv", "a");
-        fprintf(fpt, "%02d:%02d, %2.1f\n", tm.tm_hour, tm.tm_min, T);
-        fclose(fpt);
+        csvfile = fopen("/var/www/data/3_Temperatures.csv", "a");
+        fprintf(csvfile, "%02d:%02d, %2.1f\n", tm.tm_hour, tm.tm_min, T);
+        fclose(csvfile);
         break;
     }
 
