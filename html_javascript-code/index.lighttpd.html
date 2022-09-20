@@ -14,6 +14,14 @@
         <canvas id="chart2"></canvas>
         <canvas id="chart3"></canvas>
         <script>
+
+          let buttonCoordinates = [{
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          }]
+
             const chart1 = ['chart1', '/data/0_Temperatures.csv'];
             const chart2 = ['chart2', '/data/2_Temperatures.csv'];
             const chart3 = ['chart3', '/data/3_Temperatures.csv'];
@@ -24,11 +32,12 @@
             chartIt(chart3[0], chart3[1]);
             
             async function chartIt(chart_id, table_no){
+              var filtertype = 'sma';
               const data_axis = await getData(table_no);
               const data = {
                 labels: data_axis.xs,
                 datasets: [{
-                  label: 'Temperature SMA10',
+                  label: 'SMA10 of temperature',
                   backgroundColor: 'rgb(20, 196, 250)',
                   borderColor: 'rgb(20, 196, 250)',
                   data: data_axis.movingAverage,
@@ -41,6 +50,41 @@
               }]
               };
           
+              //changeFilterButton block
+              const changeFilterButton = {
+                id: 'changeFilterButton',
+                beforeDraw(chart, args, options){
+                  const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+
+                  ctx.save();
+
+                  //text
+                  const text = 'change filter';
+                  ctx.font = '12px Arial';
+                  const textWidth = ctx.measureText(text).width;
+
+                  //box
+                  ctx.fillStyle = 'rgba(255, 26, 104, 0.2)';
+                  ctx.fillRect(right - (textWidth + 13), 5, textWidth + 15, 20);
+
+                  //box stroke
+                  ctx.strokeStyle = 'rgba(255, 26, 104, 1)';
+                  ctx.strokeRect(right - (textWidth + 13), 5, textWidth + 15, 20);
+                  
+                  //background
+                  ctx.fillStyle = '#666';
+                  ctx.textAlign = 'left';
+                  ctx.fillText(text, right - (textWidth + 5), 15);
+
+                  buttonCoordinates[0].top = 5;
+                  buttonCoordinates[0].bottom = 25;
+                  buttonCoordinates[0].left = right - (textWidth + 13);
+                  buttonCoordinates[0].right = right;
+
+                  ctx.restore();
+                }
+              };
+
               const config = {
                 type: 'line',
                 data: data,
@@ -51,13 +95,46 @@
                       //max: 65,
                     }
                   }
+                },
+                plugins: [changeFilterButton]
+              };
+
+              const ctx = document.getElementById(chart_id);
+              const myChart = new Chart(
+                ctx,
+                config
+              );
+
+              function clickButtonHandler(ctx, click){
+                const x = click.offsetX;
+                const y = click.offsetY;
+                const top = buttonCoordinates[0].top;
+                const bottom = buttonCoordinates[0].bottom;
+                const left = buttonCoordinates[0].left;
+                const right = buttonCoordinates[0].right;
+
+                if(x > left && x < right && y > top && y < bottom){
+                  changeFilter();
                 }
               };
 
-              const myChart = new Chart(
-                document.getElementById(chart_id),
-                config
-              );
+              ctx.addEventListener('click', (e) => {
+                clickButtonHandler(ctx, e)
+              })
+
+              function changeFilter(){
+                if(filtertype == 'sma'){
+                  myChart.config.data.datasets[0].label = 'lowpass filtered temperature'
+                  myChart.config.data.datasets[0].data = data_axis.filtered;
+                  filtertype = 'lowp';
+                }
+                else if(filtertype == 'lowp'){
+                  myChart.config.data.datasets[0].label = 'SMA10 of temperature'
+                  myChart.config.data.datasets[0].data = data_axis.movingAverage;
+                  filtertype = 'sma';
+                }
+                myChart.update();
+              }
             }
 
             getData(chart1[1]);
@@ -81,7 +158,9 @@
                     const temp = cols[1];
                     ys.push(parseFloat(temp));
                 });
-                //Calculate SMA3 (simple moving average 10)
+
+
+                //Calculate SMA10 (simple moving average 10)
                 const average = 10;
                 const movingAverage = [];
                 for (i = 0; i < ys.length; i++){
@@ -93,8 +172,28 @@
 
                   movingAverage.push(datapoints.reduce((a, b) => a + b, 0) / datapoints.length);
                 }
-                return {xs, ys, movingAverage};
-            }
+
+                //Lowpass Filter
+                var old_in = 0;
+                var old_out = ys[0]; //"pre-charge capacitor", so graph doesnt start from 0
+                var input = 0;
+                var output = 0;
+                run_filter();
+                const filtered = [];
+
+                for (i = 1; i < ys.length-2; i++){ // remove the -2?
+                  input = ys[i];
+                  old_in = ys[i-1];
+                  run_filter();
+                  old_out = output;
+                  filtered.push(output);
+                  };
+                  
+                function run_filter(){
+                  output = old_out*0.8 + input*0.1 + old_in*0.1;
+                }
+                return {xs, ys, movingAverage, filtered};
+            }   
         </script>
       </div>
     </body>
