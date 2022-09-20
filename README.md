@@ -1,6 +1,6 @@
 # Rock64_CpuTempOverBrowser
 
-![screenshot](https://user-images.githubusercontent.com/113915726/191049648-1a3bdbfb-a268-4a15-ad81-5a2e4e3825b6.png)
+![screenshot](https://user-images.githubusercontent.com/113915726/191346434-725ed320-cbac-435e-9aa6-72e9ad63382d.png)
 
 ## Purpose
 Simple software for monitoring the cpu temperature on a rock64 via browser using chart.js, with 3-day history, simple moving average and low pass filter calculation.
