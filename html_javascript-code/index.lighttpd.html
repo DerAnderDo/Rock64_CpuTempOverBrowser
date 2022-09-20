@@ -84,7 +84,7 @@
 
                 //Lowpass Filter
                 var old_in = 0;
-                var old_out = 0;
+                var old_out = ys[0]; //"pre-charge capacitor", so graph doesnt start from 0
                 var input = 0;
                 var output = 0;
                 run_filter();
@@ -93,13 +93,13 @@
                 for (i = 1; i < ys.length-2; i++){
                   input = ys[i];
                   old_in = ys[i-1];
-                  old_out = output;
                   run_filter();
+                  old_out = output;
                   filtered.push(output);
                   };
                   
                 function run_filter(){
-                  output = old_out*0.75 + input*0.125 + old_in*0.125;
+                  output = old_out*0.8 + input*0.1 + old_in*0.1;
                 }
 
                 return {xs, ys, filtered};
