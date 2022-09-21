@@ -82,6 +82,7 @@ int main(){
             break;
         }
         fclose(config);
+        fclose(csvfile);
     }
 
     T = read_temp(temperature);
