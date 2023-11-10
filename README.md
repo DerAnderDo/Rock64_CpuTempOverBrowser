@@ -16,6 +16,6 @@ Create a cronjob to periodically execute temp-aarch64 (for example every minute)
 ## Note to self:
 Set up SSH keys for github repo like so:
 > 1. create ssh key per `ssh-keygen -t ed25519 -C "your_email@example.com"`, passphrase optional
-> 2. run eval `$(ssh-agent -s)`
+> 2. run `eval $(ssh-agent -s)`
 > 3. add key to ssh-manager per `ssh-add PRIVATEKEY`
 > 4. ready to git
